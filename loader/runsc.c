@@ -243,16 +243,25 @@ void xcode(args_t *p)
   printf ("[ executing code...");
     
 #ifdef WIN
+  // Allocate as RW, not RWX
   bin=VirtualAlloc (0, p->code_len, 
-    MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #else
   bin=mmap (0, p->code_len, 
-    PROT_EXEC | PROT_WRITE | PROT_READ, 
+    PROT_WRITE | PROT_READ, 
     MAP_ANON  | MAP_PRIVATE, -1, 0);
 #endif
   if (bin!=NULL)
   {
     memcpy (bin, p->code, p->code_len);
+    #ifdef WIN
+    // Change to RX before execution
+    DWORD oldProtect;
+    VirtualProtect(bin, p->code_len, PAGE_EXECUTE_READ, &oldProtect);
+    #else
+    // Change to RX before execution
+    mprotect(bin, p->code_len, PROT_READ | PROT_EXEC);
+    #endif
     // create file/socket descriptors to simulate real system 
     // created interesting results on openbsd with limits
     // to how many files could be open at once..

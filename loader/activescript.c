@@ -30,6 +30,8 @@
 */
 
 // initialize virtual function table
+#include "./loader.h"
+
 static VOID ActiveScript_New(PDONUT_INSTANCE inst, IActiveScriptSite *this) {
     MyIActiveScriptSite *mas = (MyIActiveScriptSite*)this;
     

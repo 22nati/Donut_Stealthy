@@ -1617,6 +1617,39 @@ int DonutCreate(PDONUT_CONFIG c) {
     return err;
 }
 
+//NATI - 08/07/2025
+
+#define MY_DRIVER_DEVICE   L"\\\\.\\MyCustomDriver"
+#define IOCTL_NOTIFY_LOADER_FINISHED CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+void NotifyDriverLoaderFinished() {
+    HANDLE hDevice = CreateFileW(
+        MY_DRIVER_DEVICE,
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL
+    );
+
+    if (hDevice != INVALID_HANDLE_VALUE) {
+        DWORD bytesReturned;
+        DeviceIoControl(
+            hDevice,
+            IOCTL_NOTIFY_LOADER_FINISHED,
+            NULL, 0,
+            NULL, 0,
+            &bytesReturned,
+            NULL
+        );
+        CloseHandle(hDevice);
+    }
+}
+
+//NATI - 08/07/2025
+
+
 /**
  * Function: DonutDelete
  * ----------------------------
@@ -1654,6 +1687,11 @@ int DonutDelete(PDONUT_CONFIG c) {
     unmap_file();
     
     DPRINT("Leaving.");
+
+    //NATI - 08/07/2025
+    NotifyDriverLoaderFinished();
+    //NATI - 08/07/2025 
+
     return DONUT_ERROR_OK;
 }
 

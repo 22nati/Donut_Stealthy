@@ -28,6 +28,7 @@
   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include "loader.h"
 
 // find a DLL with a certain export, used by xGetProcAddress and FindExport
 LPVOID FindReference(PDONUT_INSTANCE inst, LPVOID original_dll, PCHAR dll_name, PCHAR api_name) {

@@ -125,14 +125,15 @@ BOOL injectPIC(DWORD id, LPVOID code, DWORD codeLen) {
     
     if(hp == NULL) return FALSE;
     
-    // 3. allocate executable-read-write (XRW) memory for payload
+    // 3. allocate read-write (RW) memory for payload
     printf("  [ allocating memory for payload.\n");
     cs=VirtualAllocEx(hp, NULL, codeLen, 
-      MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+      MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     
     printf("  [ writing code to %p.\n", cs);
     // 4. copy the payload to remote memory
     WriteProcessMemory(hp, cs, code, codeLen, &wr); 
+    // Change memory to RX before execution
     VirtualProtectEx(hp, cs, codeLen, PAGE_EXECUTE_READ, &t);
     
     printf("  [ press any key to continue.\n");

