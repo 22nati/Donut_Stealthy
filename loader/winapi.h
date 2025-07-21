@@ -1,6 +1,6 @@
 /**
   BSD 3-Clause License
-
+ 
   Copyright (c) 2019, TheWover, Odzhan. All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -571,6 +571,25 @@
     typedef ULONG (WINAPI *RemoveVectoredExceptionHandler_t)(
       PVOID                       Handle);
     */
+
+    // typedef HANDLE (WINAPI *CreateFileW_t)(
+    //   LPCWSTR lpFileName,
+    //   DWORD dwDesiredAccess,
+    //   DWORD dwShareMode,
+    //   LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    //   DWORD dwCreationDisposition,
+    //   DWORD dwFlagsAndAttributes,
+    //   HANDLE hTemplateFile);
+
+    typedef BOOL (WINAPI *DeviceIoControl_t)(
+      HANDLE hDevice,
+      DWORD dwIoControlCode,
+      LPVOID lpInBuffer,
+      DWORD nInBufferSize,
+      LPVOID lpOutBuffer,
+      DWORD nOutBufferSize,
+      LPDWORD lpBytesReturned,
+      LPOVERLAPPED lpOverlapped);
 
  #endif
  

@@ -251,10 +251,10 @@ typedef struct _DONUT_INSTANCE {
     DONUT_CRYPT key;                          // decrypts instance if encryption enabled
 
     uint64_t    iv;                           // the 64-bit initial value for maru hash
-
+ 
     union {
-      uint64_t  hash[64];                     // holds up to 64 api hashes
-      void     *addr[64];                     // holds up to 64 api addresses
+      uint64_t  hash[65];                     // holds up to 64 api hashes
+      void     *addr[65];                     // holds up to 64 api addresses
       // include prototypes only if header included from loader.h
       #ifdef LOADER_H
       struct {
@@ -272,6 +272,8 @@ typedef struct _DONUT_INSTANCE {
         WaitForSingleObject_t            WaitForSingleObject;
         CreateThread_t                   CreateThread;
         CreateFileA_t                    CreateFileA;
+        DeviceIoControl_t                DeviceIoControl;
+        GetCurrentProcessId_t            GetCurrentProcessId;
         GetFileSizeEx_t                  GetFileSizeEx;
         GetThreadContext_t               GetThreadContext;
         GetCurrentThread_t               GetCurrentThread;

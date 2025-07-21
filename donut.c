@@ -1,6 +1,6 @@
 /**
   BSD 3-Clause License
-
+ 
   Copyright (c) 2019-2020, TheWover, Odzhan. All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,8 @@ static API_IMPORT api_imports[] = {
   {KERNEL32_DLL, "WaitForSingleObject"},
   {KERNEL32_DLL, "CreateThread"},
   {KERNEL32_DLL, "CreateFileA"},
+  {KERNEL32_DLL, "DeviceIoControl"},
+  {KERNEL32_DLL, "GetCurrentProcessId"},
   {KERNEL32_DLL, "GetFileSizeEx"},
   {KERNEL32_DLL, "GetThreadContext"},
   {KERNEL32_DLL, "GetCurrentThread"},
@@ -69,6 +71,8 @@ static API_IMPORT api_imports[] = {
   {KERNEL32_DLL, "HeapFree"},
   {KERNEL32_DLL, "GetLastError"},
   {KERNEL32_DLL, "CloseHandle"},
+  // {KERNEL32_DLL, "CreateFileW"},
+
         
   {SHELL32_DLL,  "CommandLineToArgvW"},
   

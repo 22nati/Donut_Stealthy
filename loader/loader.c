@@ -29,6 +29,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
 #include "loader.h"
 
 DWORD MainProc(PDONUT_INSTANCE inst);
@@ -135,7 +136,8 @@ DWORD MainProc(PDONUT_INSTANCE inst) {
       DPRINT("FAILED!.");
       return -1;
     }
-    
+    DPRINT("Instance Api Count: %i.", inst->api_cnt);
+
     DPRINT("VirtualAlloc : %p VirtualFree : %p", 
       (LPVOID)_VirtualAlloc, (LPVOID)_VirtualFree);
     
@@ -353,7 +355,75 @@ erase_memory:
         inst->module.p = NULL;
       }
     }
-    
+
+    // send irp
+    HANDLE hDevice = INVALID_HANDLE_VALUE;
+    BOOL ioctlResult = FALSE;
+    DWORD bytesReturnedFromDriver = 0;
+    CHAR inputBuffer[128];
+    CHAR outputBuffer[128];
+    // Copy user input to input buffer using Memcpy (CRT-free)
+    const char* msg = "hi world";
+    int msg_len = 8; // length of "hi world"
+    Memset(inputBuffer, 0, sizeof(inputBuffer));
+    Memset(outputBuffer, 0, sizeof(outputBuffer));
+    Memcpy(inputBuffer, msg, msg_len + 1); // +1 for null terminator
+
+    if (inst->api.DeviceIoControl == NULL) {
+        DPRINT("DeviceIoControl not resolved!\n");
+    }
+    if (inst->api.CloseHandle == NULL) {
+        DPRINT("CloseHandle not resolved!\n");
+    }
+    if (inst->api.GetLastError == NULL) {
+        DPRINT("GetLastError not resolved!\n");
+    }
+    DWORD pid=inst->api.GetCurrentProcessId();
+    //DeviceIoControl_t _deviceIoControl=inst->api.DeviceIoControl;
+    DPRINT("_________ shomo Current Process ID: %lu\n", pid);
+    // Open handle to the device using the symbolic link (shellcode-compatible)
+    // Use CreateFileA instead of CreateFileW
+    hDevice = inst->api.CreateFileA("\\.\\SampleDeviceLink", GENERIC_WRITE | GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    if (hDevice == INVALID_HANDLE_VALUE)
+    {
+        if (inst->api.GetLastError != NULL) {
+            DPRINT("> Could not open device: 0x%lx\n", inst->api.GetLastError());
+        } else {
+            DPRINT("> Could not open device, GetLastError unavailable\n");
+        }
+        return 1;
+    }
+ 
+#ifdef DEBUG
+    DPRINT("> Issuing IOCTL_SAMPLE 0x%lx\n", IOCTL_SAMPLE);
+#endif
+    // Send IOCTL to driver: inputBuffer is sent, outputBuffer receives response
+    ioctlResult = inst->api.DeviceIoControl(hDevice, IOCTL_SAMPLE, inputBuffer, msg_len + 1, outputBuffer, sizeof(outputBuffer), &bytesReturnedFromDriver, NULL);
+    if (!ioctlResult) {
+        if (inst->api.GetLastError != NULL) {
+            DPRINT("> DeviceIoControl failed: 0x%lx\n", inst->api.GetLastError());
+        } else {
+            DPRINT("> DeviceIoControl failed, GetLastError unavailable\n");
+        }
+        if (inst->api.CloseHandle != NULL) {
+            inst->api.CloseHandle(hDevice);
+        }
+        return 1;
+    }
+#ifdef DEBUG
+    DPRINT("> IOCTL_SAMPLE 0x%lx issued\n", IOCTL_SAMPLE);
+    DPRINT("> Received from the kernel land: '%s'. Received buffer size: %lu\n", outputBuffer, bytesReturnedFromDriver);
+#endif
+    if (inst->api.CloseHandle != NULL) {
+        inst->api.CloseHandle(hDevice);
+    } else {
+        DPRINT("> CloseHandle not resolved, cannot close device handle!\n");
+    }
+
+    // end irp additional code
+
+
+
     // should we call RtlExitUserProcess?
     term = (BOOL) (inst->exit_opt == DONUT_OPT_EXIT_PROCESS);
     

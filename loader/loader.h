@@ -1,6 +1,6 @@
 /**
   BSD 3-Clause License
-
+ 
   Copyright (c) 2019, TheWover, Odzhan. All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 
 #ifndef LOADER_H
 #define LOADER_H
+
 
 #if !defined(_MSC_VER)
 #define __out_ecount_full(x)
@@ -92,6 +93,10 @@ NTSTATUS RtlUserThreadStart(LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpPara
 #if !defined(_MSC_VER)
 #define memcmp(x,y,z) Memcmp(x,y,z)
 #endif
+
+// driver 
+#define IOCTL_SAMPLE CTL_CODE(FILE_DEVICE_UNKNOWN, 0x2049, METHOD_BUFFERED, FILE_ANY_ACCESS)
+// driver end
 
 #include "../include/depack.h"
 #include "peb.h"           // Process Environment Block
